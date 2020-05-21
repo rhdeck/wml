@@ -8,14 +8,13 @@ var isThere = require("is-there");
 var links = require("../links.js");
 
 exports.command = "add <src> <dest>";
-exports.options = { y: { alias: "yes", default: false, type: "boolean" } };
-exports.describe = "Adds a link";
+exports.describe = "Adds a link, ignores node_modules and .git";
 
 exports.builder = {};
 
-function promptForIgnoredFolders(src, rules, assumeyes) {
+function promptForIgnoredFolders(src, rules) {
     var prompts = [];
-    if (assumeyes) {
+    if (true) {
         return new Promise((resolve) => {
             resolve(rules.map(({ ignore }) => ignore));
         });
@@ -66,33 +65,27 @@ exports.handler = function (argv) {
 
     for (i in links.data) {
         if (links.data[i].src === src && links.data[i].dest === dest) {
-            console.log("Error: link already exists");
             return;
         }
     }
-
-    promptForIgnoredFolders(
-        src,
-        [
-            {
-                name: "git",
-                relPath: ".git",
-                ignore: ".git",
-                message:
-                    "Source folder is a git repo, add `.git` to ignored folders?",
-                default: true,
-            },
-            {
-                name: "npm",
-                relPath: "package.json",
-                ignore: "node_modules",
-                message:
-                    "Source folder is an npm package, add `node_modules` to ignored folders?",
-                default: true,
-            },
-        ],
-        src.yes
-    ).then((ignoredFolders) => {
+    promptForIgnoredFolders(src, [
+        {
+            name: "git",
+            relPath: ".git",
+            ignore: ".git",
+            message:
+                "Source folder is a git repo, add `.git` to ignored folders?",
+            default: true,
+        },
+        {
+            name: "npm",
+            relPath: "package.json",
+            ignore: "node_modules",
+            message:
+                "Source folder is an npm package, add `node_modules` to ignored folders?",
+            default: true,
+        },
+    ]).then((ignoredFolders) => {
         var watchmanConfigPath = path.resolve(src, ".watchmanconfig");
 
         var watchmanConfig = (() => {
